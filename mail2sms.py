@@ -1,7 +1,5 @@
 import cgi
 import os
-import urllib2
-import feedparser
 
 from google.appengine.api import users
 from google.appengine.ext import db
@@ -56,49 +54,11 @@ class ClearLogs(webapp.RequestHandler):
 		#redirect
 		self.redirect('/')
 
-class ReadEmails(webapp.RequestHandler):
-	def get_unread_msgs(self, user, passwd):
-		auth_handler = urllib2.HTTPBasicAuthHandler()
-		auth_handler.add_password(
-			realm='New mail feed',
-			uri='https://mail.google.com',
-			user='%s@gmail.com' % user,
-			passwd=passwd
-		)
-		opener = urllib2.build_opener(auth_handler)
-		urllib2.install_opener(opener)
-		feed = urllib2.urlopen('https://mail.google.com/mail/feed/atom')
-		return feed.read()
-	
-	def read_mail(self, feed):
-		'''Parse the Atom feed and print a summary'''
-		atom = feedparser.parse(feed)
-		
-		num_email = len(atom.entries)
 
-		if num_email > 1:
-			print '%s new emails\n' % (len(atom.entries))
-		else:
-			print 'No new emails\n'
-		for i in range(min(num_email,8)):
-			mail = atom.entries[i]
-			print '%d. %s' % (i+1, mail.title)
-			print '%s' % (mail.summary.encode("iso-8859-15", "replace"))
-			print '%s' % (mail.author.encode("iso-8859-15", "replace"))
-			print '%s\n' % (mail.modified)
-			
-	def post(self):
-		feed = self.get_unread_msgs("liviu22", "guardianangelDMX")
-		self.read_mail(feed)
-			
-		#redirect
-		self.redirect('/')
-		
 application = webapp.WSGIApplication(
                                      [('/', MainPage),
                                       ('/sign', Guestbook),
-                                      ('/clear_db', ClearLogs),
-									  ('/read_emails', ReadEmails)],
+                                      ('/clear_db', ClearLogs)],
                                      debug=True)
 
 def main():

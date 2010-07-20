@@ -1,0 +1,4 @@
+cron:
+- description: check inbox every minute
+  url: /check_inbox
+  schedule: every 1 minutes

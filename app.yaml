@@ -11,5 +11,9 @@ handlers:
 - url: /stylesheets
   static_dir: stylesheets
 
+- url: /check_inbox
+  script: check_inbox.py
+  login: admin
+  
 - url: /.*
   script: mail2sms.py
