@@ -9,6 +9,12 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+class myMail(db.Model):
+	mail_from = db.StringProperty(multiline=True)
+	subject = db.StringProperty(multiline=True)
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
 class ReadEmails(webapp.RequestHandler):
 	def get_unread_msgs(self, user, passwd):
 		auth_handler = urllib2.HTTPBasicAuthHandler()
@@ -33,12 +39,20 @@ class ReadEmails(webapp.RequestHandler):
 			print '%s new emails\n' % (len(atom.entries))
 		else:
 			print 'No new emails\n'
-		for i in range(min(num_email,8)):
+			
+		'''Empty db first. '''
+		my_emails = db.GqlQuery("SELECT * FROM myMail")
+		for my_email in my_emails:
+			my_email.delete()
+			
+		for i in range(num_email):
 			mail = atom.entries[i]
-			print '%d. %s' % (i+1, mail.title)
-			print '%s' % (mail.summary.encode("iso-8859-15", "replace"))
-			print '%s' % (mail.author.encode("iso-8859-15", "replace"))
-			print '%s\n' % (mail.modified)
+			'''Put unread email in db'''
+			email = myMail()
+			email.mail_from = mail.author.encode("iso-8859-15", "replace")
+			email.subject = mail.title
+			email.content = mail.summary.encode("iso-8859-15", "replace")
+			email.put()
 			
 	def get(self):
 		feed = self.get_unread_msgs("liviu22", "guardianangelDMX")
