@@ -112,9 +112,9 @@ class ReadEmails(webapp.RequestHandler):
 				
 						'''If new unread mail, add to emails db'''
 						email = myMail()
-						email.mail_from = mail.author.encode("iso-8859-15", "replace")
-						email.subject = mail.title+""
-						email.content = mail.summary.encode("iso-8859-15", "replace")
+						email.mail_from = "{"+mail.author.encode("iso-8859-15", "replace")+"}"
+						email.subject = "{"+mail.title+"}"
+						email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
 						email.date = total
 						email.put()
 						
