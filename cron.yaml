@@ -1,4 +1,4 @@
 cron:
-- description: check inbox every minute
+- description: check inbox periodically
   url: /check_inbox
   schedule: every 1 minutes
