@@ -3,3 +3,5 @@
 + send emails using calendar
 - comment source code
 - refactoring
+- error handling
+- logging

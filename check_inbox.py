@@ -61,8 +61,26 @@ class ReadEmails(webapp.RequestHandler):
 				a_when.reminder[0].minutes = 0
 			else: 
 				a_when.reminder.append(gdata.calendar.Reminder(minutes=0)) 
-		new_event = calendar_service.InsertEvent(event, alternateLink.href)		
-	
+		'''Work-around 302 redirect error'''
+		j = 3 
+		while True: 
+			if j < 1: 
+				print 'Unable to post Google event ' + event.title 
+				return 0 
+			try: 
+				new_event = calendar_service.InsertEvent(event, alternateLink.href)		
+			except gdata.service.RequestError, inst: 
+				thing = inst[0] 
+				if thing['status'] == 302: 
+					print 'Received redirect - retrying ' + title 
+					j = j - 1 
+					time.sleep(2.0) 
+					continue 
+			except: 
+				# Some other exception 
+				raise 
+			break 
+			
 	def get_unread_msgs(self, user, passwd):
 		auth_handler = urllib2.HTTPBasicAuthHandler()
 		auth_handler.add_password(
@@ -104,20 +122,13 @@ class ReadEmails(webapp.RequestHandler):
 				'''can contain o or 1 data maximum'''
 				for my_time in my_times:
 					if my_time.myTime < total :
-						#New unread email 
-						my_time.delete()
-						currentTime = myLastRecentTime()
-						currentTime.myTime = total		
-						currentTime.put()
-				
 						'''If new unread mail, add to emails db'''
 						email = myMail()
 						email.mail_from = "{"+mail.author.encode("iso-8859-15", "replace")+"}"
 						email.subject = "{"+mail.title+"}"
 						email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
 						email.date = total
-						email.put()
-						
+												
 						'''Add SMS in calendar'''
 						my_calendar_service = self.loginToCalendar(user, passwd) #login to Google Calendar
 						''' Find myMail2sms calendar'''
@@ -128,13 +139,20 @@ class ReadEmails(webapp.RequestHandler):
 							print "Error getting all calendar feed: %s" % (e)
 							return
 	    
-						#Now loop through all of the CalendarListEntry items.
+						'''Now loop through all of the CalendarListEntry items.'''
 						for (index, cal) in enumerate(all_calendars_feed.entry):
 							if (cal.title.text=="myMail2sms"):
 								#Add new event
 								self.InsertSingleEvent(my_calendar_service, cal, 
 								email.mail_from+email.subject, "Yet another event",
 								email.content)
+								'''Put new unread email in db only if added succesfully to calendar'''
+								email.put()
+								'''Update current unread email time'''
+								my_time.delete()
+								currentTime = myLastRecentTime()
+								currentTime.myTime = total		
+								currentTime.put()
 								return
 			
 	def get(self):
