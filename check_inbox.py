@@ -100,6 +100,20 @@ class ReadEmails(webapp.RequestHandler):
 		
 		num_email = len(atom.entries)
 
+		'''Get the time of last added message in db'''
+		mostRecentTime = 0		
+		my_times = db.GqlQuery("SELECT * FROM myLastRecentTime")
+		if my_times.count() == 0:
+			''' No dates in db. Add one'''
+			currentTime = myLastRecentTime()
+			currentTime.myTime = mostRecentTime		
+			currentTime.put()
+			return
+		else:
+			'''can contain 0 or 1 data maximum'''
+			for my_time in my_times:
+				mostRecentTime = my_time.myTime
+		
 		for i in reversed(range(num_email)):
 			mail = atom.entries[i]
 			
@@ -111,48 +125,42 @@ class ReadEmails(webapp.RequestHandler):
 			mi = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[1])
 			sec = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[2].split('Z')[0])
 			total = sec+mi*60+h*3600+d*24*3600+(y-2010)*365*3600*24
-			
-			my_times = db.GqlQuery("SELECT * FROM myLastRecentTime")
-			if my_times.count() == 0:
-				''' No dates in db. Add one'''
-				currentTime = myLastRecentTime()
-				currentTime.myTime = total		
-				currentTime.put()
-			else:
-				'''can contain o or 1 data maximum'''
-				for my_time in my_times:
-					if my_time.myTime < total :
-						'''If new unread mail, add to emails db'''
-						email = myMail()
-						email.mail_from = "{"+mail.author.encode("iso-8859-15", "replace")+"}"
-						email.subject = "{"+mail.title+"}"
-						email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
-						email.date = total
+			if (total > mostRecentTime) :
+				'''Message is more recent. Has to be added.'''
+				mostRecentTime = total
+									
+				email = myMail()
+				email.mail_from = "{"+mail.author.encode("iso-8859-15", "replace")+"}"
+				email.subject = "{"+mail.title+"}"
+				email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
+				email.date = total
 												
-						'''Add SMS in calendar'''
-						my_calendar_service = self.loginToCalendar(user, passwd) #login to Google Calendar
-						''' Find myMail2sms calendar'''
-						try:
-						#Get the CalendarListFeed
-							all_calendars_feed = my_calendar_service.GetOwnCalendarsFeed()
-						except Exception, e:
-							print "Error getting all calendar feed: %s" % (e)
-							return
+				'''Add SMS in calendar'''
+				my_calendar_service = self.loginToCalendar(user, passwd) #login to Google Calendar
+				''' Find myMail2sms calendar'''
+				try:
+					#Get the CalendarListFeed
+					all_calendars_feed = my_calendar_service.GetOwnCalendarsFeed()
+				except Exception, e:
+					print "Error getting all calendar feed: %s" % (e)
+					return
 	    
-						'''Now loop through all of the CalendarListEntry items.'''
-						for (index, cal) in enumerate(all_calendars_feed.entry):
-							if (cal.title.text=="myMail2sms"):
-								#Add new event
-								self.InsertSingleEvent(my_calendar_service, cal, 
-								email.mail_from+email.subject, "Yet another event",
-								email.content)
-								'''Put new unread email in db only if added succesfully to calendar'''
-								email.put()
-								'''Update current unread email time'''
-								my_time.delete()
-								currentTime = myLastRecentTime()
-								currentTime.myTime = total		
-								currentTime.put()
+				'''Now loop through all of the CalendarListEntry items.'''
+				for (index, cal) in enumerate(all_calendars_feed.entry):
+					if (cal.title.text=="myMail2sms"):
+						#Add new event
+						self.InsertSingleEvent(my_calendar_service, cal, 
+							email.mail_from+email.subject, "Yet another event",
+							email.content)
+						'''Put new unread email in db only if added succesfully to calendar'''
+						email.put()
+		
+		'''Update most recent time'''
+		for my_time in my_times:
+			my_time.delete()
+			currentTime = myLastRecentTime()
+			currentTime.myTime = mostRecentTime		
+			currentTime.put()
 			
 	def get(self):
 		user = "liviu22"
