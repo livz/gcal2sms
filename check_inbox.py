@@ -130,7 +130,7 @@ class ReadEmails(webapp.RequestHandler):
 				mostRecentTime = total
 									
 				email = myMail()
-				email.mail_from = "{"+mail.author.encode("iso-8859-15", "replace")+"}"
+				email.mail_from = "{"+(mail.author.partition('(')[0]).encode("iso-8859-15", "replace")+"}"
 				email.subject = "{"+mail.title+"}"
 				email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
 				email.date = total
