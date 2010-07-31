@@ -1,7 +1,7 @@
 + add unread emails into database
 + check date/time field on db entries
 + send emails using calendar
-- comment source code
-- refactoring
++ comment source code
++ refactoring
 - error handling
 - logging
