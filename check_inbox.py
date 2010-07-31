@@ -100,7 +100,7 @@ class ReadEmails(webapp.RequestHandler):
 		
 		num_email = len(atom.entries)
 
-		for i in range(num_email):
+		for i in reversed(range(num_email)):
 			mail = atom.entries[i]
 			
 			''' Get the date of the most recent message'''
@@ -153,7 +153,6 @@ class ReadEmails(webapp.RequestHandler):
 								currentTime = myLastRecentTime()
 								currentTime.myTime = total		
 								currentTime.put()
-								return
 			
 	def get(self):
 		user = "liviu22"
