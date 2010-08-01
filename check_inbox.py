@@ -16,6 +16,10 @@ import atom.service
 import gdata.calendar
 import atom
 
+nr_days = [31, 28, 31,30,31,30,31, 31, 30, 31, 30, 31]
+day_s = 24*3600
+year_s = 365*3600*24
+
 class myMail(db.Model):
 	mail_from = db.StringProperty(multiline=True)
 	subject = db.StringProperty(multiline=True)
@@ -65,7 +69,7 @@ class ReadEmails(webapp.RequestHandler):
 		j = 3 
 		while True: 
 			if j < 1: 
-				print 'Unable to post Google event ' + event.title 
+				print 'Unable to post Google event ' + title 
 				return 0 
 			try: 
 				new_event = calendar_service.InsertEvent(event, alternateLink.href)		
@@ -74,12 +78,13 @@ class ReadEmails(webapp.RequestHandler):
 				if thing['status'] == 302: 
 					print 'Received redirect - retrying ' + title 
 					j = j - 1 
-					time.sleep(2.0) 
+					#time.sleep(2.0) 
 					continue 
 			except: 
 				# Some other exception 
 				raise 
-			break 
+			break
+		return 1
 			
 	def get_unread_msgs(self, user, passwd):
 		auth_handler = urllib2.HTTPBasicAuthHandler()
@@ -124,7 +129,7 @@ class ReadEmails(webapp.RequestHandler):
 			h = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[0])
 			mi = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[1])
 			sec = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[2].split('Z')[0])
-			total = sec+mi*60+h*3600+d*24*3600+(y-2010)*365*3600*24
+			total = sec+mi*60+h*3600+(d-1)*day_s+sum(nr_days[0:(m-1)])*day_s+(y-2010)*year_s
 			if (total > mostRecentTime) :
 				'''Message is more recent. Has to be added.'''
 				mostRecentTime = total
@@ -149,11 +154,12 @@ class ReadEmails(webapp.RequestHandler):
 				for (index, cal) in enumerate(all_calendars_feed.entry):
 					if (cal.title.text=="myMail2sms"):
 						#Add new event
-						self.InsertSingleEvent(my_calendar_service, cal, 
+						ok = self.InsertSingleEvent(my_calendar_service, cal, 
 							email.mail_from+email.subject, "Yet another event",
 							email.content)
 						'''Put new unread email in db only if added succesfully to calendar'''
-						email.put()
+						if (ok == 1) :
+							email.put()
 		
 		'''Update most recent time'''
 		for my_time in my_times:
