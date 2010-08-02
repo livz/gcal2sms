@@ -135,9 +135,9 @@ class ReadEmails(webapp.RequestHandler):
 				mostRecentTime = total
 									
 				email = myMail()
-				email.mail_from = "{"+(mail.author.partition('(')[0]).encode("iso-8859-15", "replace")+"}"
-				email.subject = "{"+mail.title+"}"
-				email.content = "{"+mail.summary.encode("iso-8859-15", "replace")+"}"
+				email.mail_from = "{"+(mail.author.partition('(')[0]).encode("ascii", "ignore")+"}"
+				email.subject = "{"+mail.title.encode("ascii", "ignore")+"}"
+				email.content = "{"+mail.summary.encode("ascii", "ignore")+"}"
 				email.date = total
 												
 				'''Add SMS in calendar'''
