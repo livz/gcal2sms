@@ -98,14 +98,14 @@ class ReadEmails(webapp.RequestHandler):
 		urllib2.install_opener(opener)
 		try:
 			feed = urllib2.urlopen('https://mail.google.com/mail/feed/atom')
-		except HTTPError, e:
+		except urllib2.HTTPError, e:
 			print 'The server couldn\'t fulfill the request.'
 			print 'Error code: ', e.code
-			sys.exit(1)
-		except URLError, e:
+			exit(1)
+		except urllib2.URLError, e:
 			print 'We failed to reach a server.'
 			print 'Reason: ', e.reason
-			sys.exit(2)
+			exit(2)
 		return feed.read()
 	
 	def read_mail(self, feed, user, passwd):
