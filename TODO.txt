@@ -5,3 +5,5 @@
 + refactoring
 + error handling
 - logging
+- interfata administrare html
+- multiuser
