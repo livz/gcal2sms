@@ -153,7 +153,7 @@ class ReadEmails(webapp.RequestHandler):
 				email.date = total
 												
 				'''Add SMS in calendar'''
-				my_calendar_service = self.loginToCalendar(user, passwd) '''login to Google Calendar'''
+				my_calendar_service = self.loginToCalendar(user, passwd) 
 				''' Find myMail2sms calendar'''
 				try:
 					'''Get the CalendarListFeed'''
