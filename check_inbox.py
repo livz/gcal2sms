@@ -56,7 +56,7 @@ class ReadEmails(webapp.RequestHandler):
 
 		alternateLink = calendar.GetAlternateLink()
 		if start_time is None:
-			# Use current time for the start_time and have the event last 1 minute
+			''' Use current time for the start_time and have the event last 1 minute '''
 			start_time = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + 60*2))
 			end_time = time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime(time.time() + 60*3))
 		event.when.append(gdata.calendar.When(start_time=start_time, end_time=end_time))
@@ -81,7 +81,7 @@ class ReadEmails(webapp.RequestHandler):
 					#time.sleep(2.0) 
 					continue 
 			except: 
-				# Some other exception 
+				''' Some other exception '''
 				raise 
 			break
 		return 1
@@ -119,6 +119,8 @@ class ReadEmails(webapp.RequestHandler):
 			for my_time in my_times:
 				mostRecentTime = my_time.myTime
 		
+		foundMoreRecent = 0
+		
 		for i in reversed(range(num_email)):
 			mail = atom.entries[i]
 			
@@ -133,7 +135,8 @@ class ReadEmails(webapp.RequestHandler):
 			if (total > mostRecentTime) :
 				'''Message is more recent. Has to be added.'''
 				mostRecentTime = total
-									
+				foundMoreRecent = 1
+				
 				email = myMail()
 				email.mail_from = "{"+(mail.author.partition('(')[0]).encode("ascii", "ignore")+"}"
 				email.subject = "{"+mail.title.encode("ascii", "ignore")+"}"
@@ -141,10 +144,10 @@ class ReadEmails(webapp.RequestHandler):
 				email.date = total
 												
 				'''Add SMS in calendar'''
-				my_calendar_service = self.loginToCalendar(user, passwd) #login to Google Calendar
+				my_calendar_service = self.loginToCalendar(user, passwd) '''login to Google Calendar'''
 				''' Find myMail2sms calendar'''
 				try:
-					#Get the CalendarListFeed
+					'''Get the CalendarListFeed'''
 					all_calendars_feed = my_calendar_service.GetOwnCalendarsFeed()
 				except Exception, e:
 					print "Error getting all calendar feed: %s" % (e)
@@ -153,7 +156,7 @@ class ReadEmails(webapp.RequestHandler):
 				'''Now loop through all of the CalendarListEntry items.'''
 				for (index, cal) in enumerate(all_calendars_feed.entry):
 					if (cal.title.text=="myMail2sms"):
-						#Add new event
+						'''Add new event'''
 						ok = self.InsertSingleEvent(my_calendar_service, cal, 
 							email.mail_from+email.subject, "Yet another event",
 							email.content)
@@ -161,12 +164,13 @@ class ReadEmails(webapp.RequestHandler):
 						if (ok == 1) :
 							email.put()
 		
-		'''Update most recent time'''
-		for my_time in my_times:
-			my_time.delete()
-			currentTime = myLastRecentTime()
-			currentTime.myTime = mostRecentTime		
-			currentTime.put()
+		if (foundMoreRecent == 1) :
+			'''Update most recent time'''
+			for my_time in my_times:
+				my_time.delete()
+				currentTime = myLastRecentTime()
+				currentTime.myTime = mostRecentTime		
+				currentTime.put()
 			
 	def get(self):
 		user = "liviu22"
