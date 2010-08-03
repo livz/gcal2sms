@@ -1,6 +1,7 @@
 import cgi
 import os
 import urllib2
+import logging
 import feedparser
 import time
 
@@ -39,11 +40,12 @@ class ReadEmails(webapp.RequestHandler):
 		try:
 			calendar_service.ProgrammaticLogin()
 		except gdata.service.BadAuthentication, e:
-			print "Authentication error logging in: %s" % e
+			logging.error('Authentication error logging in: %s', e)
 			return
 		except Exception, e:
-			print "Error Logging in: %s" % e
+			logging.error('Error Logging in: %s', e)
 			return
+		logging.info('Successfully logged into calendar')
 		return calendar_service
 			
 	def InsertSingleEvent(self, calendar_service, calendar, title='{Subiect}', 
@@ -69,14 +71,14 @@ class ReadEmails(webapp.RequestHandler):
 		j = 3 
 		while True: 
 			if j < 1: 
-				print 'Unable to post Google event ' + title 
+				logging.error('Unable to post Google event %s ', title) 
 				return 0 
 			try: 
 				new_event = calendar_service.InsertEvent(event, alternateLink.href)		
 			except gdata.service.RequestError, inst: 
 				thing = inst[0] 
 				if thing['status'] == 302: 
-					print 'Received redirect - retrying ' + title 
+					logging.warning('Received redirect - retrying %s ', title)
 					j = j - 1 
 					#time.sleep(2.0) 
 					continue 
@@ -99,13 +101,15 @@ class ReadEmails(webapp.RequestHandler):
 		try:
 			feed = urllib2.urlopen('https://mail.google.com/mail/feed/atom')
 		except urllib2.HTTPError, e:
-			print 'The server couldn\'t fulfill the request.'
-			print 'Error code: ', e.code
+			logging.error('The server couldn\'t fulfill the request.')
+			logging.error('Error code: %s ', e.code)
 			exit(1)
 		except urllib2.URLError, e:
-			print 'We failed to reach a server.'
-			print 'Reason: ', e.reason
+			logging.error('We failed to reach a server.')
+			logging.error('Reason: %s .', e.reason)
 			exit(2)
+			
+		logging.info('Feed opened')
 		return feed.read()
 	
 	def read_mail(self, feed, user, passwd):
@@ -159,7 +163,7 @@ class ReadEmails(webapp.RequestHandler):
 					'''Get the CalendarListFeed'''
 					all_calendars_feed = my_calendar_service.GetOwnCalendarsFeed()
 				except Exception, e:
-					print "Error getting all calendar feed: %s" % (e)
+					logging.error('Error getting all calendar feed: %s.', e)
 					return
 	    
 				'''Now loop through all of the CalendarListEntry items.'''
@@ -192,7 +196,9 @@ application = webapp.WSGIApplication([('/check_inbox', ReadEmails)],
                                      debug=True)
 
 def main():
-    run_wsgi_app(application)
+	level = logging.CRITICAL
+	logging.getLogger().setLevel(level)
+	run_wsgi_app(application)
 
 if __name__ == "__main__":
     main()

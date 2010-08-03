@@ -4,6 +4,6 @@
 + comment source code
 + refactoring
 + error handling
-- logging
++ logging
 - interfata administrare html
 - multiuser
