@@ -4,12 +4,14 @@ import urllib2
 import logging
 import feedparser
 import time
+import socket
 
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api.urlfetch import DownloadError 
 
 import gdata.calendar.service
 import gdata.service
@@ -97,7 +99,8 @@ class ReadEmails(webapp.RequestHandler):
 			passwd=passwd
 		)
 		opener = urllib2.build_opener(auth_handler)
-		urllib2.install_opener(opener)
+		urllib2.install_opener(opener)		
+
 		try:
 			feed = urllib2.urlopen('https://mail.google.com/mail/feed/atom')
 		except urllib2.HTTPError, e:
@@ -108,6 +111,12 @@ class ReadEmails(webapp.RequestHandler):
 			logging.error('We failed to reach a server.')
 			logging.error('Reason: %s .', e.reason)
 			exit(2)
+		except DownloadError, e:
+			logging.error('Download error: %s.', e)
+			exit(3)
+		except Exception, e:
+			logging.error('Other exception in urlopen: %s', e)
+			exit(4)
 			
 		logging.info('Feed opened')
 		return feed.read()
@@ -196,7 +205,7 @@ application = webapp.WSGIApplication([('/check_inbox', ReadEmails)],
                                      debug=True)
 
 def main():
-	level = logging.CRITICAL
+	level = logging.WARNING
 	logging.getLogger().setLevel(level)
 	run_wsgi_app(application)
 
