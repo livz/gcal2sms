@@ -154,11 +154,7 @@ class ReadEmails(webapp.RequestHandler):
 			mi = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[1])
 			sec = (int)(mail.modified.split('-')[2].split('T')[1].split(':')[2].split('Z')[0])
 			total = sec+mi*60+h*3600+(d-1)*day_s+sum(nr_days[0:(m-1)])*day_s+(y-2010)*year_s
-			if (total > mostRecentTime) :
-				'''Message is more recent. Has to be added.'''
-				mostRecentTime = total
-				foundMoreRecent = 1
-				
+			if (total > mostRecentTime) :				
 				email = myMail()
 				email.mail_from = "{"+(mail.author.partition('(')[0]).encode("ascii", "ignore")+"}"
 				email.subject = "{"+mail.title.encode("ascii", "ignore")+"}"
@@ -172,7 +168,7 @@ class ReadEmails(webapp.RequestHandler):
 					'''Get the CalendarListFeed'''
 					all_calendars_feed = my_calendar_service.GetOwnCalendarsFeed()
 				except Exception, e:
-					logging.error('Error getting all calendar feed: %s.', e)
+					logging.error('Error getting all calendars feed: %s.', e)
 					return
 	    
 				'''Now loop through all of the CalendarListEntry items.'''
@@ -185,6 +181,9 @@ class ReadEmails(webapp.RequestHandler):
 						'''Put new unread email in db only if added succesfully to calendar'''
 						if (ok == 1) :
 							email.put()
+							'''Message is more recent. Has to be added.'''
+							mostRecentTime = total
+							foundMoreRecent = 1
 		
 		if (foundMoreRecent == 1) :
 			'''Update most recent time'''

@@ -2,8 +2,10 @@
 + check date/time field on db entries
 + send emails using calendar
 + comment source code
-+ refactoring
+- refactoring
 + error handling
 + logging
 - interfata administrare html
 - multiuser
+- mailuri lungi
+- same subject (fetch eail content not just summary)
