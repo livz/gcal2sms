@@ -195,7 +195,7 @@ class ReadEmails(webapp.RequestHandler):
 			
 	def get(self):
 		user = "liviu22"
-		passwd = "guardianangelDMX"
+		passwd = "XXXXX"
 		feed = self.get_unread_msgs(user, passwd)
 		self.read_mail(feed, user, passwd)
 			
