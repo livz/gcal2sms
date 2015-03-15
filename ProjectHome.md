@@ -1,0 +1,1 @@
+Periodically check GMail inbox and add calendar events for new emails.
